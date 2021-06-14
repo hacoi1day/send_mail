@@ -2,7 +2,6 @@ version: '3'
 
 networks:
   mailer:
-    name: mailer
 
 services:
 
@@ -38,14 +37,8 @@ services:
       - mailer
 
   php:
-    build:
-      context: .
-      dockerfile: php.dockerfile
-      args:
-        user: havt
-        uid: 1000
+    image: havt/mailer_php
     container_name: php_${APP_NAME}
-    user: ${UID:-1000}:${GID:-1000}
     volumes:
       - ./:/var/www/html/
     ports:
