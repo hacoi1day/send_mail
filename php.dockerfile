@@ -2,11 +2,24 @@ FROM php:7.4-fpm
 
 WORKDIR /var/www/html
 
-# Instal PDO
-RUN docker-php-ext-install pdo pdo_mysql
+# Instal PDO and Extensions for Export Excel
+# RUN docker-php-ext-install pdo pdo_mysql
 
-# Install Compose
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
-# Install Supervisor
-RUN apt update && apt install supervisor -y
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+# Copy composer.lock and composer.json
+COPY /composer.lock /composer.json /var/www/html/
+
+RUN install-php-extensions pdo pdo_mysql zip gd
+
+# Arguments defined in docker-compose.yml
+ARG user
+ARG uid
+
+# Create system user to run Composer and Artisan Commands
+RUN useradd -G www-data,root -u $uid -d /home/$user $user
+RUN mkdir -p /home/$user/.composer && \
+    chown -R $user:$user /home/$user
+
+USER $user

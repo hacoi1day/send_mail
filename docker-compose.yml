@@ -19,6 +19,7 @@ services:
       - mysql
     networks:
       - mailer
+
   mysql:
     image: mysql:5.7.33
     container_name: mysql_${APP_NAME}
@@ -35,20 +36,19 @@ services:
       SERVICE_NAME: mysql
     networks:
       - mailer
+
   php:
     build:
       context: .
       dockerfile: php.dockerfile
+      args:
+        user: havt
+        uid: 1000
     container_name: php_${APP_NAME}
     user: ${UID:-1000}:${GID:-1000}
     volumes:
       - ./:/var/www/html/
-      - ./supervisor/conf.d:/etc/supervisor/conf.d/
-    # command:
-    #   - /bin/sh
-    #   - -c
-    #   - supervisord -c /var/www/html/supervisor/mail.conf
-    #   - supervisorctl start laravel-worker:*
+      # - ./supervisor/conf.d:/etc/supervisor/conf.d/
     ports:
       - 9000:9000
     networks:
