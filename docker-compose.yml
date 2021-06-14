@@ -1,0 +1,55 @@
+version: '3'
+
+networks:
+  mailer:
+    name: mailer
+
+services:
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx_${APP_NAME}
+    ports:
+      - 80:80
+    volumes:
+      - ./:/var/www/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - php
+      - mysql
+    networks:
+      - mailer
+  mysql:
+    image: mysql:5.7.33
+    container_name: mysql_${APP_NAME}
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: mailer
+      MYSQL_USER: havt
+      MYSQL_PASSWORD: 1234
+      MYSQL_ROOT_PASSWORD: 123456aa
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - mailer
+  php:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    container_name: php_${APP_NAME}
+    user: ${UID:-1000}:${GID:-1000}
+    volumes:
+      - ./:/var/www/html/
+      - ./supervisor/conf.d:/etc/supervisor/conf.d/
+    # command:
+    #   - /bin/sh
+    #   - -c
+    #   - supervisord -c /var/www/html/supervisor/mail.conf
+    #   - supervisorctl start laravel-worker:*
+    ports:
+      - 9000:9000
+    networks:
+      - mailer
